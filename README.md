@@ -40,7 +40,7 @@ Major community contributions:
 ## Role options
 These options change how the role works. This is a catch-all group, specific groups are broken out below.
 | Variable                     | Type    | Choices     | Default           | Comment                                                                       |
-|------------------------------|---------|-------------|-------------------|-------------------------------------------------------------------------------|
+| ---------------------------- | ------- | ----------- | ----------------- | ----------------------------------------------------------------------------- |
 | clients                      | list    |             | []                | List of clients to add to OpenVPN                                             |
 | openvpn_base_dir             | string  |             | /etc/openvpn      | Path where your OpenVPN config will be stored                                 |
 | openvpn_client_config_no_log | boolean | true, false | true              | Prevent client configuration files to be logged to stdout by Ansible          |
@@ -55,7 +55,7 @@ These options change how the role works. This is a catch-all group, specific gro
 ### Config fetching
 Change these options if you need to adjust how the configs are download to your local system
 | Variable                            | Type    | Choices     | Default      | Comment                                                                                                                                   |
-|-------------------------------------|---------|-------------|--------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------------------------------- | ------- | ----------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | openvpn_fetch_client_configs        | boolean | true, false | true         | Download generated client configurations to the local system                                                                              |
 | openvpn_fetch_client_configs_dir    | string  |             | /tmp/ansible | If openvpn_fetch_client_configs is true, the local directory to download the client config files into                                     |
 | openvpn_fetch_client_configs_suffix | string  |             | ""           | If openvpn_fetch_client_configs is true, the suffix to append to the downloaded client config files before the trailing `.ovpn` extension |
@@ -63,17 +63,18 @@ Change these options if you need to adjust how the configs are download to your 
 ### Firewall
 Change these options if you need to force a particular firewall or change how the playbook interacts with the firewall.
 | Variable                         | Type    | Choices                        | Default  | Comment                                                                                                     |
-|----------------------------------|---------|--------------------------------|----------|-------------------------------------------------------------------------------------------------------------|
+| -------------------------------- | ------- | ------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------- |
 | firewalld_default_interface_zone | string  |                                | public   | Firewalld zone where the "ansible_default_ipv4.interface" will be pushed into                               |
 | iptables_service                 | string  |                                | iptables | Override the iptables service name                                                                          |
 | manage_firewall_rules            | boolean | true, false                    | true     | Allow playbook to manage iptables                                                                           |
 | openvpn_firewall                 | string  | auto, firewalld, ufw, iptables | auto     | The firewall software to configure network rules. "auto" will attempt to detect it by inspecting the system |
+| openvpn_configure_nat            | boolean | true, false                    | true     | Set to true if you want to set up the NAT (MASQUERADE or SNAT)                                              |
 | openvpn_masquerade_not_snat      | boolean | true, false                    | false    | Set to true if you want to set up MASQUERADE instead of the default SNAT in iptables.                       |
 ## OpenVPN Config Options
 These options change how OpenVPN itself works.
 ### Networking
 | Variable                    | Type         | Choices           | Default                    | Comment                                                                                                                                              |
-|-----------------------------|--------------|-------------------|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --------------------------- | ------------ | ----------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | openvpn_client_register_dns | boolean      | true, false       | true                       | Add `register-dns` option to client config (Windows only).                                                                                           |
 | openvpn_client_to_client    | boolean      | true, false       | false                      | Set to true if you want clients to access each other.                                                                                                |
 | openvpn_custom_dns          | list[string] |                   | []                         | List of DNS servers, only applied if `openvpn_set_dns` is set to true                                                                                |
@@ -92,25 +93,26 @@ These options change how OpenVPN itself works.
 | openvpn_set_dns             | boolean      | true, false       | true                       | Will push DNS to the client (Cloudflare and Google)                                                                                                  |
 | openvpn_tun_mtu             | int          |                   | `unset`                    | Set `tun-mtu` value. Empty for default.                                                                                                              |
 ### Security
-| Variable                           | Type    | Choices     | Default     | Comment                                                                                                                                                         |
-|------------------------------------|---------|-------------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| openvpn_auth_alg                   | string  |             | SHA256      | Set `auth` authentication algoritm.                                                                                                                             |
-| openvpn_ca_key                     | dict    |             | `unset`     | Contain "crt" and "key". If not set, CA cert and key will be automatically generated on the target system.                                                      |
-| openvpn_cipher                     | string  |             | AES-256-CBC | Set `cipher` option for server and client.                                                                                                                      |
-| openvpn_crl_path                   | string  |             | `unset`     | Define a path to the CRL file for server revocation check.                                                                                                      |
-| openvpn_duplicate_cn               | boolean | true, false | false       | Add `duplicate-cn` option to server config - this allows clients to connect multiple times with the one key. NOTE: client ip addresses won't be static anymore! |
-| openvpn_rsa_bits                   | int     |             | 2048        | Number of bits used to protect generated certificates                                                                                                           |
-| openvpn_script_security            | int     |             | 1           | Set openvpn script security option                                                                                                                              |
-| openvpn_tls_auth_key               | string  |             | `unset`     | Single item with a pre-generated TLS authentication key.                                                                                                        |
-| openvpn_use_crl                    | boolean | true, false | false       | Configure OpenVPN server to honor certificate revocation list.                                                                                                  |
-| openvpn_use_hardened_tls           | boolean | true, false | true        | Require a minimum version of TLS 1.2                                                                                                                            |
-| openvpn_use_modern_tls             | boolean | true, false | true        | Use modern Cipher for TLS encryption (Not recommended with OpenVPN 2.4)                                                                                         |
-| openvpn_use_pregenerated_dh_params | boolean | true, false | false       | DH params are generted with the install by default                                                                                                              |
-| openvpn_verify_cn                  | boolean | true, false | false       | Check that the CN of the certificate match the FQDN                                                                                                             |
-| tls_auth_required                  | boolean | true, false | true        | Ask the client to push the generated ta.key of the server during the connection                                                                                 |
+| Variable                           | Type    | Choices                   | Default     | Comment                                                                                                                                                         |
+| ---------------------------------- | ------- | ------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| verify_client_cert                 | string  | none , optional , require |             | In OpenVPN 2.4+ `client-cert-not-required` is deprecated. Use `verify-client-cert` instead.                                                                     |
+| openvpn_auth_alg                   | string  |                           | SHA256      | Set `auth` authentication algoritm.                                                                                                                             |
+| openvpn_ca_key                     | dict    |                           | `unset`     | Contain "crt" and "key". If not set, CA cert and key will be automatically generated on the target system.                                                      |
+| openvpn_cipher                     | string  |                           | AES-256-CBC | Set `cipher` option for server and client.                                                                                                                      |
+| openvpn_crl_path                   | string  |                           | `unset`     | Define a path to the CRL file for server revocation check.                                                                                                      |
+| openvpn_duplicate_cn               | boolean | true, false               | false       | Add `duplicate-cn` option to server config - this allows clients to connect multiple times with the one key. NOTE: client ip addresses won't be static anymore! |
+| openvpn_rsa_bits                   | int     |                           | 2048        | Number of bits used to protect generated certificates                                                                                                           |
+| openvpn_script_security            | int     |                           | 1           | Set openvpn script security option                                                                                                                              |
+| openvpn_tls_auth_key               | string  |                           | `unset`     | Single item with a pre-generated TLS authentication key.                                                                                                        |
+| openvpn_use_crl                    | boolean | true, false               | false       | Configure OpenVPN server to honor certificate revocation list.                                                                                                  |
+| openvpn_use_hardened_tls           | boolean | true, false               | true        | Require a minimum version of TLS 1.2                                                                                                                            |
+| openvpn_use_modern_tls             | boolean | true, false               | true        | Use modern Cipher for TLS encryption (Not recommended with OpenVPN 2.4)                                                                                         |
+| openvpn_use_pregenerated_dh_params | boolean | true, false               | false       | DH params are generted with the install by default                                                                                                              |
+| openvpn_verify_cn                  | boolean | true, false               | false       | Check that the CN of the certificate match the FQDN                                                                                                             |
+| tls_auth_required                  | boolean | true, false               | true        | Ask the client to push the generated ta.key of the server during the connection                                                                                 |
 ### Operations
 | Variable                           | Type    | Choices     | Default                                          | Comment                                                                                                                                                                       |
-|------------------------------------|---------|-------------|--------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ---------------------------------- | ------- | ----------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | openvpn_addl_client_options        | list    |             | empty                                            | List of user-defined client options that are not already present in the client template. (e.g. `- mssfix 1400`)                                                               |
 | openvpn_addl_server_options        | list    |             | empty                                            | List of user-defined server options that are not already present in the server template. (e.g. `- ping-timer-rem`)                                                            |
 | openvpn_compression                | string  |             | lzo                                              | Set `compress` compression option. Empty for no compression.                                                                                                                  |
@@ -131,7 +133,7 @@ These options change how OpenVPN itself works.
 
 ### OpenVPN custom client config (server pushed)
 | Variable                  | Type    | Choices | Default | Comment                                              |
-|---------------------------|---------|---------|---------|------------------------------------------------------|
+| ------------------------- | ------- | ------- | ------- | ---------------------------------------------------- |
 | openvpn_client_config     | Boolean |         | false   | Set to true if enable client configuration directory |
 | openvpn_client_config_dir | string  |         | ccd     | Path of `client-config-dir`                          |
 | openvpn_client_configs    | dict    |         | {}      | Dict of settings custom client configs               |
@@ -139,7 +141,7 @@ These options change how OpenVPN itself works.
 ## Logrotate
 Set your own custom logrotate options
 | Variable                 | Type   | Choices | Default                                                                                                     | Comment                                                                                          |
-|--------------------------|--------|---------|-------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| ------------------------ | ------ | ------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | openvpn_log_dir          | string |         | /var/log                                                                                                    | Set location of openvpn log files. This parameter is a part of `log-append` configuration value. |
 | openvpn_log_file         | string |         | openvpn.log                                                                                                 | Set log filename. This parameter is a part of `log-append` configuration value.                  |
 | openvpn_logrotate_config | string |         | rotate 4<br />weekly<br />missingok<br />notifempty<br />sharedscripts<br />copytruncate<br />delaycompress | Configure logrotate script.                                                                      |
@@ -147,7 +149,7 @@ Set your own custom logrotate options
 ## Packaging
 This role pulls in a bunch of different packages. Override the names as necessary.
 | Variable                         | Type   | Choices | Default             | Comment                                                                     |
-|----------------------------------|--------|---------|---------------------|-----------------------------------------------------------------------------|
+| -------------------------------- | ------ | ------- | ------------------- | --------------------------------------------------------------------------- |
 | epel_package_name                | string |         | epel-release        | Name of the epel-release package to install from the package manager        |
 | iptables_persistent_package_name | string |         | iptables-persistent | Name of the iptables-persistent package to install from the package manager |
 | iptables_services_package_name   | string |         | iptables-services   | Name of the iptables-services package to install from the package manager   |
@@ -157,23 +159,30 @@ This role pulls in a bunch of different packages. Override the names as necessar
 | python_firewall_package_name     | string |         | python-firewall     | Name of the python-firewall package to install from the package manager     |
 
 ## LDAP object
-| Variable            | Type   | Choices                   | Default                                 | Comment                                                                                      |
-|---------------------|--------|---------------------------|-----------------------------------------|----------------------------------------------------------------------------------------------|
-| ldap                | dict   |                           |                                         | Dictionary that contain LDAP configuration                                                   |
-| url                 | string |                           | ldap://host.example.com                 | Address of you LDAP backend with syntax ldap[s]://host[:port]                                |
-| anonymous_bind      | string | False , True              | False                                   | This is not an Ansible boolean but a string that will be pushed into the configuration file. |
-| bind_dn             | string |                           | uid=Manager,ou=People,dc=example,dc=com | Bind DN used if "anonymous_bind" set to "False"                                              |
-| bind_password       | string |                           | mysecretpassword                        | Password of the bind_dn user                                                                 |
-| tls_enable          | string | yes , no                  | no                                      | Force TLS encryption. Not necessary with ldaps addresses                                     |
-| tls_ca_cert_file    | string |                           | /etc/openvpn/auth/ca.pem                | Path to the CA ldap backend. This must have been pushed before                               |
-| tls_cert_file       | string |                           |                                         | Path to client authentication certificate                                                    |
-| tls_key_file        | string |                           |                                         | Path to client authentication key                                                            |
-| base_dn             | string |                           | ou=People,dc=example,dc=com             | Base DN where the backend will look for valid user                                           |
-| search_filter       | string |                           | (&(uid=%u)(accountStatus=active))       | Filter the ldap search                                                                       |
-| require_group       | string | False , True              |                                         | This is not an Ansible boolean but a string that will be pushed into the configuration file. |
-| group_base_dn       | string |                           | ou=Groups,dc=example,dc=com             | Precise the group to look for. Required if require_group is set to "True"                    |
-| group_search_filter | string |                           | ((cn=developers)(cn=artists))           | Precise valid groups                                                                         |
-| verify_client_cert  | string | none , optional , require | client-cert-not-required                | In OpenVPN 2.4+ `client-cert-not-required` is deprecated. Use `verify-client-cert` instead.  |
+| Variable            | Type   | Choices      | Default                                 | Comment                                                                                      |
+| ------------------- | ------ | ------------ | --------------------------------------- | -------------------------------------------------------------------------------------------- |
+| ldap                | dict   |              |                                         | Dictionary that contain LDAP configuration                                                   |
+| url                 | string |              | ldap://host.example.com                 | Address of you LDAP backend with syntax ldap[s]://host[:port]                                |
+| anonymous_bind      | string | False , True | False                                   | This is not an Ansible boolean but a string that will be pushed into the configuration file. |
+| bind_dn             | string |              | uid=Manager,ou=People,dc=example,dc=com | Bind DN used if "anonymous_bind" set to "False"                                              |
+| bind_password       | string |              | mysecretpassword                        | Password of the bind_dn user                                                                 |
+| tls_enable          | string | yes , no     | no                                      | Force TLS encryption. Not necessary with ldaps addresses                                     |
+| tls_ca_cert_file    | string |              | /etc/openvpn/auth/ca.pem                | Path to the CA ldap backend. This must have been pushed before                               |
+| tls_cert_file       | string |              |                                         | Path to client authentication certificate                                                    |
+| tls_key_file        | string |              |                                         | Path to client authentication key                                                            |
+| base_dn             | string |              | ou=People,dc=example,dc=com             | Base DN where the backend will look for valid user                                           |
+| search_filter       | string |              | (&(uid=%u)(accountStatus=active))       | Filter the ldap search                                                                       |
+| require_group       | string | False , True |                                         | This is not an Ansible boolean but a string that will be pushed into the configuration file. |
+| group_base_dn       | string |              | ou=Groups,dc=example,dc=com             | Precise the group to look for. Required if require_group is set to "True"                    |
+| group_search_filter | string |              | ((cn=developers)(cn=artists))           | Precise valid groups                                                                         |
+
+# Custom authentication
+| Variable                  | Type   | Choices           | Default   | Comment                              |
+| ------------------------- | ------ | ----------------- | --------- | ------------------------------------ |
+| auth_custom_script        | dict   |                   | undefined | enable auth-user-pass-verify         |
+| auth_custom_script.cmd    | string |                   |           | path of custom authentication script |
+| auth_custom_script.method | string | via-env, via-file |           | method to pass user/password         |
+
 
 # Dependencies
 Does not depend on any other roles

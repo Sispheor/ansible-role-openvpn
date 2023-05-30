@@ -77,8 +77,12 @@ push "{{ opt }}"
 {% endfor %}
 {% endif %}
 keepalive {{ openvpn_keepalive_ping }} {{ openvpn_keepalive_timeout }}
-{% if openvpn_compression is not undefined and openvpn_compression != "" %}
+{% if openvpn_compression is defined and openvpn_compression != "" %}
+# deprecated in OpenVPN 2.5
 compress {{ openvpn_compression }}
+{% endif %}
+{% if openvpn_allow_compress is defined and openvpn_allow_compress != "" %}
+allow-compression {{ openvpn_allow_compress }}
 {% endif %}
 persist-key
 persist-tun
@@ -111,7 +115,11 @@ management-client-user {{ openvpn_management_client_user }}
 {% if ansible_os_family == 'Debian' %}
 plugin /usr/lib/openvpn/openvpn-auth-ldap.so "{{ openvpn_base_dir }}/auth/ldap.conf"
 {% elif ansible_machine == "x86_64" %}
+{% if ansible_distribution in ['RedHat','Rocky'] and (ansible_distribution_major_version | int >= 8) %}
+plugin /usr/lib64/openvpn/plugins/openvpn-auth-ldap.so "{{ openvpn_base_dir }}/auth/ldap.conf"
+{% else %}
 plugin /usr/lib64/openvpn/plugin/lib/openvpn-auth-ldap.so "{{ openvpn_base_dir }}/auth/ldap.conf"
+{% endif %}
 {% else %}
 plugin /usr/lib/openvpn/plugin/lib/openvpn-auth-ldap.so "{{ openvpn_base_dir }}/auth/ldap.conf"
 {% endif %}
@@ -137,4 +145,12 @@ client-connect {{ openvpn_base_dir }}/client_connect.sh
 {% endif %}
 {% if openvpn_script_client_disconnect is defined %}
 client-disconnect {{ openvpn_base_dir }}/client_disconnect.sh
+{% endif %}
+
+{% if auth_custom_script is defined %}
+auth-user-pass-verify {{ auth_custom_script.cmd }} {{ auth_custom_script.method }}
+{% endif %}
+
+{% if openvpn_verify_client_cert is defined %}
+verify-client-cert {{ openvpn_verify_client_cert }}
 {% endif %}
